@@ -19,3 +19,21 @@ export const Cart = {
     cartItems = [];
   },
 };
+export const CartUtils = {
+  isEmpty: () => {
+    return cartItems.length === 0;
+  },
+  removeItem: (productId) => {
+    cartItems = cartItems.filter(item => item.product.id !== productId);
+  },
+  updateQuantity: (productId, quantity) => {
+    const item = cartItems.find(item => item.product.id === productId);
+    if (item) {
+      item.quantity = quantity;
+      if (item.quantity <= 0) {
+        CartUtils.removeItem(productId);
+      }
+    }
+  }
+};
+

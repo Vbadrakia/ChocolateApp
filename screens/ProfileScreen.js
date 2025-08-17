@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
-import { db } from '../firebaseConfig';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { db, auth } from '../firebaseConfig';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 
-const AdminOrderListScreen = () => {
+const ProfileScreen = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'orders'), orderBy('timestamp', 'desc'));
+    if (!auth.currentUser) return;
+    const q = query(
+      collection(db, 'orders'), 
+      where("userId", "==", auth.currentUser.uid),
+      orderBy('timestamp', 'desc')
+    );
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const ordersList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setOrders(ordersList);
@@ -20,8 +25,7 @@ const AdminOrderListScreen = () => {
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <Text style={styles.bold}>Order ID: {item.id.substring(0, 8)}...</Text>
-      <Text>Customer: {item.customerName}</Text>
-      <Text>Address: {item.shippingAddress}</Text>
+      <Text>Date: {new Date(item.timestamp.seconds * 1000).toLocaleDateString()}</Text>
       <Text>Total: ${item.totalPrice.toFixed(2)}</Text>
       <Text>Status: {item.status}</Text>
     </View>
@@ -37,6 +41,7 @@ const AdminOrderListScreen = () => {
       renderItem={renderItem}
       keyExtractor={item => item.id}
       contentContainerStyle={styles.container}
+      ListEmptyComponent={<Text style={{textAlign: 'center', marginTop: 50}}>You have no past orders.</Text>}
     />
   );
 };
@@ -47,5 +52,4 @@ const styles = StyleSheet.create({
   bold: { fontWeight: 'bold' },
 });
 
-export default AdminOrderListScreen;
-
+export default ProfileScreen;

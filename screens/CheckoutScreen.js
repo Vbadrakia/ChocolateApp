@@ -15,10 +15,8 @@ const CheckoutScreen = ({ navigation }) => {
       Alert.alert("Error", "Please fill in all fields.");
       return;
     }
-
     setLoading(true);
-
-    const order = {
+    const orderData = {
       userId: auth.currentUser.uid,
       customerName: name,
       shippingAddress: address,
@@ -28,20 +26,14 @@ const CheckoutScreen = ({ navigation }) => {
       status: 'Pending',
       timestamp: new Date(),
     };
-
     try {
-      await addDoc(collection(db, 'orders'), order);
-      Alert.alert("Success", "Your order has been placed!", [
-        { text: "OK", onPress: () => {
-          Cart.clearCart();
-          navigation.popToTop(); // Go back to the top of the stack (ProductList)
-        }}
-      ]);
+      const docRef = await addDoc(collection(db, 'orders'), orderData);
+      Cart.clearCart();
+      navigation.replace('OrderConfirmation', { orderId: docRef.id, totalPrice: orderData.totalPrice });
     } catch (error) {
       Alert.alert("Error", "Could not place order. Please try again.");
-      console.error("Error placing order: ", error);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -51,19 +43,15 @@ const CheckoutScreen = ({ navigation }) => {
       <TextInput style={styles.input} placeholder="Full Name" value={name} onChangeText={setName} />
       <TextInput style={styles.input} placeholder="Shipping Address" value={address} onChangeText={setAddress} />
       <TextInput style={styles.input} placeholder="Phone Number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-      {loading ? (
-        <ActivityIndicator size="large" />
-      ) : (
-        <Button title="Place Order (Cash on Delivery)" onPress={handlePlaceOrder} />
-      )}
+      {loading ? <ActivityIndicator size="large" /> : <Button title="Place Order (Cash on Delivery)" onPress={handlePlaceOrder} color="#622A0F" />}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  container: { flex: 1, padding: 20, backgroundColor: '#F5EFEA' },
   title: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
-  input: { borderWidth: 1, borderColor: 'gray', padding: 10, marginBottom: 15, borderRadius: 5 },
+  input: { backgroundColor: 'white', borderWidth: 1, borderColor: '#ddd', padding: 10, marginBottom: 15, borderRadius: 5 },
 });
 
 export default CheckoutScreen;
